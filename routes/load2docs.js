@@ -7,10 +7,13 @@ function load2docs(callback) {
         host:     'localhost',
         port:     '8000',
         database: 'Documents',
-        user:     'admin',
-        password: 'admin',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
         authType: 'DIGEST'
     });
+    // Wouldn't it be nice to find out this failed now, at the 
+    // time we create the database client.  Currently, we find 
+    // out when we try to use it.
     
     db.createCollection(
         '/books',
@@ -25,6 +28,7 @@ function load2docs(callback) {
         callback();  // Calls back just the same if there is an error.
     });
     // What happens if I create the collection twice?
+    // Ans: It just succeeds, but is much faster!
 }
 
 router.get('/', function(req, res, next) {
