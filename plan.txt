@@ -1,0 +1,97 @@
+1. Put a document in. 
+/docs/add
+
+This has to be done for any of the CRUD operations:
+var marklogic = require('marklogic');
+var db = marklogic.createDatabaseClient({
+      host: 'localhost', 
+      port: '8000', 
+      user: 'admin', 
+      password: 'admin', 
+      authType: 'DIGEST'
+});
+
+The first step is to use our DatabaseClient instance (db) to write a document by calling the write() method:
+db.documents.write({
+  uri: '/afternoon-drink',
+  contentType: 'application/json',
+  content: {
+    name: 'Iced Mocha',
+    size: 'Grand',
+    tasty: true
+  }
+}).result(function(response) {
+  console.log(JSON.stringify(response, null, 2));
+});
+​
+The result will be:
+{
+  "documents": [
+    {
+      "uri": "/afternoon-drink",
+      "contentType": null
+    }
+  ]
+}
+
+
+
+1 1/2. Read one document.  (Do we have a use for this?)
+/docs/retrieve
+
+To get the document back, call the read() method:
+db.documents.read({uris: '/afternoon-drink'}).result(…)
+
+
+
+1 3/4.  Updating a document.  (Do we have a user for this?)
+        Let's don't have a separate operation for this.  Just /docs/add again. 
+
+Updating (replacing) the document works exactly the same as creating a document: use the write() method.
+
+
+
+2. List all the documents.
+/docs/list
+
+3. Remove a document. 
+/docs/remove
+
+To delete the document, call the remove() method:
+db.documents.remove('/afternoon-drink').result(…)
+
+
+
+4. Find a set of documents that match a set of (not-really-key) words.
+/docs/find
+
+To execute any kind of query, call a document instance's query() method and 
+construct the query using queryBuilder instance qb():
+var qb = marklogic.queryBuilder;
+db.documents.query(
+  qb.where(…)
+
+String Query
+To run a search that retrieves documents with the word, "delicious":
+db.documents.query(
+  qb.where(
+    qb.term('delicious')
+  )).result(…)
+
+If you only want documents with this word that are in your drinks collection, you can do:
+db.documents.query(
+  qb.where(
+    qb.and(
+      qb.collection('drinks'),
+      qb.term('delicious')
+    )
+  )).result(…)
+
+From Understanding the queryBuilder Interface:
+structured	
+db.documents.query(
+  qb.where(
+    qb.and(qb.term('cat'), qb.term('dog'))
+  ).orderBy(qb.sort('descending')
+   .slice(0,5)
+)
