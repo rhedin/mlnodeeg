@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var marklogic = require('marklogic');
+var newsData = require('./data.js');
 
 function load2docs(callback) {
     var db = marklogic.createDatabaseClient({
