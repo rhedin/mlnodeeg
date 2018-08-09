@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var marklogic = require('marklogic');
 var newsData = require('./data.js');
+const NewsAPI = require('newsapi');
+const newsapi = new NewsAPI('4f59056a196149c381bd8c5c48c7218a');
 
 function storeDocs(callback) {
     var db = marklogic.createDatabaseClient({
@@ -92,25 +94,105 @@ router.get('/find', function(req, res, next) {
     });
 });
 
+function storeDocs2(docs) {
+    var db = marklogic.createDatabaseClient({
+        host:     'localhost',
+        port:     '8000',
+        database: 'Documents',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
+        authType: 'DIGEST'
+    });
+    
+    return db.createCollection(
+        '/news',
+        docs
+    )
+    .result();
+}
+
+function removeDocs2() {
+    var db = marklogic.createDatabaseClient({
+        host:     'localhost',
+        port:     '8000',
+        database: 'Documents',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
+        authType: 'DIGEST'
+    });
+    
+    return db.documents.removeAll({collection: '/news'})
+    .result();
+}
+
+function findDocs2(words) {
+    var db = marklogic.createDatabaseClient({
+        host:     'localhost',
+        port:     '8000',
+        database: 'Documents',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
+        authType: 'DIGEST'
+    });
+
+    var qb = marklogic.queryBuilder;
+
+    var queryString = words.split(' ').join(' OR ');
+    console.log(`queryString = ${queryString}`);
+
+    return db.documents.query(  // Yes, first one is db
+        qb.where(  // And rest are qb.
+            // qb.term('russia')
+            qb.parsedFrom(queryString)
+        )
+    ).result();
+}
+
+function getNewNews() {
+    return newsapi.v2.topHeadlines({
+        q: 'trump',
+        category: 'politics',
+        language: 'en',
+        country: 'us'
+    })
+    .then(response => {
+        removeDocs2()
+        // .then( () => {
+        //     storeDocs2(response);
+        // });
+    })
+}
+
+function filterDocs(words) {
+    return findDocs2(words);
+}
+
 router.post('/loadNews', function(req, res, next) {
-    console.log(`In loadNews.  req.body = ${req.body} = ${JSON.stringify(res.body, null, 4)}`);
-    res.send({
-        name: 'Charlie',
-        phone: '800-DMY-DATA',
+    console.log(`In loadNews.  req.body = ${req.body} = ${JSON.stringify(req.body, null, 4)}`);
+    // res.send({
+    //     name: 'Charlie',
+    //     phone: '800-DMY-DATA',
+    // });
+    getNewNews()
+    .then( () => {
+        filterDocs(req.body.words)
+        .then(docs => {
+            res.send(docs);
+        });
     });
 });
+// Believe can align .then's at the left edge.
 
-// router.post('/searchNews', function(req, res, next) {
-//     console.log(`In searchNews.  req.body = ${req.body}`);
-//     res.send({
-//         name: 'Pamela',
-//         phone: '800-DMY-DATA',
-//     });
-// });
-
-router.get('/searchNews', function(req, res, next) {
-    console.log(`In searchNews.  req.body = ${req.body} = ${JSON.stringify(res.body, null, 4)}`);
-    res.send('dummy response');
+router.post('/searchNews', function(req, res, next) {
+    console.log(`In searchNews.  req.body = ${req.body} = ${JSON.stringify(req.body, null, 4)}`);
+    // res.send({
+    //     name: 'Pamela',
+    //     phone: '800-DMY-DATA',
+    // });
+    filterDocs(req.body.words)
+    .then(docs => {
+        res.send(docs);
+    });
 });
 
 module.exports = router;
