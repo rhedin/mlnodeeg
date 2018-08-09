@@ -38,10 +38,35 @@ function removeDocs(callback) {
     
     db.documents.removeAll({collection: '/news'})
     .result(function(response) {
-        console.log(`Call to db.removeAll succeeded.\n${JSON.stringify(response, null, 4)}`);
+        console.log(`Call to db.documents.removeAll succeeded.\n${JSON.stringify(response, null, 4)}`);
         callback();
     }, function (error) {
-        console.log(`Call to db.removeAll failed.\n${JSON.stringify(error, null, 4)}`);
+        console.log(`Call to db.documents.removeAll failed.\n${JSON.stringify(error, null, 4)}`);
+        callback();
+    });
+}
+
+function findDocs(callback) {
+    var db = marklogic.createDatabaseClient({
+        host:     'localhost',
+        port:     '8000',
+        database: 'Documents',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
+        authType: 'DIGEST'
+    });
+
+    var qb = marklogic.queryBuilder;
+
+    db.documents.query(  // Yes, first one is db
+        qb.where(        // And rest are qb.
+            qb.term('russia')
+        )
+    ).result(function(results) {
+        console.log(`Call to db.documents.query succeeded.\n${JSON.stringify(results, null, 4)}`);
+        callback();
+    }, function (error) {
+        console.log(`Call to db.documents.query failed.\n${JSON.stringify(error, null, 4)}`);
         callback();
     });
 }
@@ -57,6 +82,13 @@ router.get('/remove', function(req, res, next) {
     console.log(`In docs/remove route.`);
     removeDocs( () => {
         res.send('Removed the documents.');
+    });
+});
+
+router.get('/find', function(req, res, next) {
+    console.log(`In docs/find route.`);
+    findDocs( () => {
+        res.send('Found the documents.');
     });
 });
 
