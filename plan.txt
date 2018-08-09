@@ -95,3 +95,11 @@ db.documents.query(
   ).orderBy(qb.sort('descending')
    .slice(0,5)
 )
+
+
+
+
+1.  Store documents. 
+2.  Delete documents.
+
+3.  Query documents.
