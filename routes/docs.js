@@ -92,6 +92,27 @@ router.get('/find', function(req, res, next) {
     });
 });
 
+router.post('/loadNews', function(req, res, next) {
+    console.log(`In loadNews.  req.body = ${req.body} = ${JSON.stringify(res.body, null, 4)}`);
+    res.send({
+        name: 'Charlie',
+        phone: '800-DMY-DATA',
+    });
+});
+
+// router.post('/searchNews', function(req, res, next) {
+//     console.log(`In searchNews.  req.body = ${req.body}`);
+//     res.send({
+//         name: 'Pamela',
+//         phone: '800-DMY-DATA',
+//     });
+// });
+
+router.get('/searchNews', function(req, res, next) {
+    console.log(`In searchNews.  req.body = ${req.body} = ${JSON.stringify(res.body, null, 4)}`);
+    res.send('dummy response');
+});
+
 module.exports = router;
 
 
