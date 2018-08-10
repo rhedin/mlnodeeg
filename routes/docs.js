@@ -106,7 +106,8 @@ function storeDocs2(docs) {
     
     return db.createCollection(
         '/news',
-        docs
+        // docs
+        newsData.articles
     )
     .result();
 }
@@ -143,7 +144,11 @@ function findDocs2(words) {
     return db.documents.query(  // Yes, first one is db
         qb.where(  // And rest are qb.
             // qb.term('russia')
-            qb.parsedFrom(queryString)
+            // qb.and(
+                // qb.collection('/news'),
+                // qb.parsedFrom(queryString)
+                qb.term('trump')
+            // )
         )
     ).result();
 }
@@ -157,9 +162,9 @@ function getNewNews() {
     })
     .then(response => {
         removeDocs2()
-        // .then( () => {
-        //     storeDocs2(response);
-        // });
+        .then( () => {
+            storeDocs2(response);
+        });
     })
 }
 
