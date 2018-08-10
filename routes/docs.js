@@ -4,6 +4,7 @@ var marklogic = require('marklogic');
 var newsData = require('./data.js');
 const NewsAPI = require('newsapi');
 const newsapi = new NewsAPI('4f59056a196149c381bd8c5c48c7218a');
+var jc = require('json-cycle');
 
 function storeDocs(callback) {
     var db = marklogic.createDatabaseClient({
@@ -48,6 +49,27 @@ function removeDocs(callback) {
     });
 }
 
+function removeAllDocs(callback) {
+    var db = marklogic.createDatabaseClient({
+        host:     'localhost',
+        port:     '8000',
+        database: 'Documents',
+        user:     'rickhedin',
+        password: 'Sadie1Tink2',
+        authType: 'DIGEST'
+    });
+    
+    db.documents.removeAll({all: true})
+    .result(function(response) {
+        console.log(`Call to db.documents.removeAll succeeded.\n${JSON.stringify(response, null, 4)}`);
+        console.log(`Database empty`);
+        callback();
+    }, function (error) {
+        console.log(`Call to db.documents.removeAll failed.\n${JSON.stringify(error, null, 4)}`);
+        callback();
+    });
+}
+
 function findDocs(callback) {
     var db = marklogic.createDatabaseClient({
         host:     'localhost',
@@ -62,7 +84,7 @@ function findDocs(callback) {
 
     db.documents.query(  // Yes, first one is db
         qb.where(        // And rest are qb.
-            qb.term('russia')
+            qb.term('trump')
         )
     ).result(function(results) {
         console.log(`Call to db.documents.query succeeded.\n${JSON.stringify(results, null, 4)}`);
@@ -87,6 +109,19 @@ router.get('/remove', function(req, res, next) {
     });
 });
 
+router.get('/removeAll', function(req, res, next) {
+    console.log(`In docs/removeAll route.`);
+    removeAllDocs( () => {
+        res.send('Removed all the documents.');
+    });
+});
+// This one is different from because /remove only removes the documents 
+// in the /news collection. 
+// We want the set of documents in the /news collection and the set of 
+// documents in the database to be the same.  /removeAll is to get us 
+// back to an entirely empty database, if someone creates some non-news 
+// entries.
+
 router.get('/find', function(req, res, next) {
     console.log(`In docs/find route.`);
     findDocs( () => {
@@ -95,6 +130,7 @@ router.get('/find', function(req, res, next) {
 });
 
 function storeDocs2(docs) {
+    console.log(`In storeDocs2.  docs = ${JSON.stringify(jc.decycle(docs), null, 4)}`);
     var db = marklogic.createDatabaseClient({
         host:     'localhost',
         port:     '8000',
@@ -106,8 +142,8 @@ function storeDocs2(docs) {
     
     return db.createCollection(
         '/news',
-        // docs
-        newsData.articles
+        docs
+        // newsData.articles
     )
     .result();
 }
@@ -146,8 +182,8 @@ function findDocs2(words) {
             // qb.term('russia')
             // qb.and(
                 // qb.collection('/news'),
-                // qb.parsedFrom(queryString)
-                qb.term('trump')
+                qb.parsedFrom(queryString)
+                // qb.term('trump')
             // )
         )
     ).result();
@@ -155,15 +191,15 @@ function findDocs2(words) {
 
 function getNewNews() {
     return newsapi.v2.topHeadlines({
-        q: 'trump',
         category: 'politics',
         language: 'en',
-        country: 'us'
+        country: 'us',
+        pageSize: 10,
     })
     .then(response => {
         removeDocs2()
         .then( () => {
-            storeDocs2(response);
+            return storeDocs2(response.articles);
         });
     })
 }
@@ -180,8 +216,10 @@ router.post('/loadNews', function(req, res, next) {
     // });
     getNewNews()
     .then( () => {
+        console.log(`    req.body.words = ${req.body.words}`);
         filterDocs(req.body.words)
         .then(docs => {
+            console.log(`    docs = ${JSON.stringify(jc.decycle(docs), null, 4)}`);
             res.send(docs);
         });
     });
@@ -194,8 +232,10 @@ router.post('/searchNews', function(req, res, next) {
     //     name: 'Pamela',
     //     phone: '800-DMY-DATA',
     // });
+    console.log(`    req.body.words = ${req.body.words}`);
     filterDocs(req.body.words)
     .then(docs => {
+        console.log(`    docs = ${JSON.stringify(jc.decycle(docs), null, 4)}`);
         res.send(docs);
     });
 });
