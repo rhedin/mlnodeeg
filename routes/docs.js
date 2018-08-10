@@ -215,13 +215,10 @@ router.post('/loadNews', function(req, res, next) {
     //     phone: '800-DMY-DATA',
     // });
     getNewNews()
-    .then( () => {
-        console.log(`    req.body.words = ${req.body.words}`);
-        filterDocs(req.body.words)
-        .then(docs => {
-            console.log(`    docs = ${JSON.stringify(jc.decycle(docs), null, 4)}`);
-            res.send(docs);
-        });
+    .then( () => filterDocs(req.body.words) )
+    .then(docs => {
+        console.log(`    docs = ${JSON.stringify(jc.decycle(docs), null, 4)}`);
+        res.send(docs);
     });
 });
 // Believe can align .then's at the left edge.
