@@ -98,9 +98,9 @@ function getNewNews() {
         pageSize: 10,
     })
     .then(response => {
-        removeDocs2()
+        removeDocs()
         .then( () => {
-            return storeDocs2(response.articles);
+            return storeDocs(response.articles);
         });
     })
 }
