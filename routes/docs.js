@@ -97,8 +97,12 @@ function getNewNews() {
         country: 'us',
         pageSize: 10,
     })
-    .then(response => removeDocs() )
-    .then( () => storeDocs(response.articles) );
+    .then(response => {
+        removeDocs2()
+        .then( () => {
+            return storeDocs2(response.articles);
+        });
+    })
 }
 
 function filterDocs(words) {
